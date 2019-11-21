@@ -25,7 +25,6 @@ public:
     FileExchangeClient(FileExchangeClient&&)                 = delete;
     FileExchangeClient& operator=(FileExchangeClient&&)      = delete;
 
-    void upload(const std::string& filename);
     void download(const std::string& filename);
 
     void cancel();

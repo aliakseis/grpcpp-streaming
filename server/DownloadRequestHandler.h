@@ -4,6 +4,8 @@
 
 #include <grpcpp/grpcpp.h>
 
+#include <deque>
+
 
 namespace FileExchange {
 
@@ -36,12 +38,16 @@ protected:
         NewCall,
         ExpectingRequest,
         SendingFile,
+        SendingNextFile,
         CallComplete
     };
 
     void handleNewCallState();
     void handleExpectingRequestState();
     void handleSendingFileState();
+
+    void listFiles(const std::string& folder);
+    void startFileDownloading();
 
     HandlerTag                      tag_;
     HandlerManager*                 handlerManager_;
@@ -62,6 +68,8 @@ protected:
     grpc::ServerAsyncWriter<DownloadResponse> responder_;
 
     unsigned long long              bytesToSend_;
+
+    std::deque<std::string>         fileNames_;
 };
 
 }

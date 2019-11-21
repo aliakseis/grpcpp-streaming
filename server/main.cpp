@@ -28,11 +28,15 @@ void signalHandler(int signo)
 
 void setSignalHandler()
 {
+#ifdef _WIN32
+    signal(SIGINT, signalHandler);
+#else
         struct sigaction sa;
         sa.sa_handler = signalHandler;
         sigemptyset(&sa.sa_mask);
         sa.sa_flags = 0;
         sigaction(SIGINT, &sa, NULL);
+#endif
 }
 
 

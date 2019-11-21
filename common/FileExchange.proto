@@ -4,7 +4,7 @@ syntax = "proto3";
 package FileExchange;
 
 service SimpleFileServer {
-    rpc Upload(stream UploadRequest) returns(UploadResponse) {}
+//    rpc Upload(stream UploadRequest) returns(UploadResponse) {}
     rpc Download(DownloadRequest)    returns(stream DownloadResponse) {}
 }
 
@@ -17,16 +17,16 @@ message FileChunk {
     bytes data = 1;
 }
 
-message UploadRequest {
-    oneof contents {
-        FileHeader header = 1;
-        FileChunk  chunk  = 2;
-    }
-}
+//message UploadRequest {
+//    oneof contents {
+//        FileHeader header = 1;
+//        FileChunk  chunk  = 2;
+//    }
+//}
 
-message UploadResponse {
-    uint64 bytesReceived = 1;
-}
+//message UploadResponse {
+//    uint64 bytesReceived = 1;
+//}
 
 message DownloadRequest {
     string name      = 1;

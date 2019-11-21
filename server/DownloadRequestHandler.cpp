@@ -5,6 +5,7 @@
 
 #include <grpc/support/log.h>
 
+#include <filesystem>
 
 using namespace FileExchange;
 
@@ -43,13 +44,16 @@ bool DownloadRequestHandler::onNext(bool ok)
         }
         else if (ok) {
             if (state_ == CallState::NewCall) {
-                this->handleNewCallState();
+                handleNewCallState();
             }
             else if (state_ == CallState::ExpectingRequest) {
-                this->handleExpectingRequestState();
+                handleExpectingRequestState();
             }
             else if (state_ == CallState::SendingFile) {
-                this->handleSendingFileState();
+                handleSendingFileState();
+            }
+            else if (state_ == CallState::SendingNextFile) {
+                startFileDownloading();
             }
         }
         else {
@@ -109,8 +113,6 @@ void DownloadRequestHandler::handleNewCallState()
 
 void DownloadRequestHandler::handleExpectingRequestState()
 {
-    const unsigned long DefaultChunkSize = 4 * 1024; // 4K
-
     try {
         handlerManager_->addHandler<DownloadRequestHandler>(handlerManager_, fileManager_, service_, cq_);
     }
@@ -118,34 +120,11 @@ void DownloadRequestHandler::handleExpectingRequestState()
         gpr_log(GPR_ERROR, "[%p] Failed to create DownloadRequest handler, no new DownloadRequest's can be processed", tag_);
     }
 
-    auto& filename = request_.name();
+    gpr_log(GPR_INFO, "[%p] Received DownloadRequest: file name [%s]", tag_, request_.name().c_str());
 
-    gpr_log(GPR_INFO, "[%p] Received DownloadRequest: file name [%s]", tag_, filename.c_str());
+    listFiles(request_.name());
 
-    if (!filename.empty()) {
-        fileReader_ = fileManager_->readFile(filename);
-
-        response_.mutable_header()->set_name(filename);
-
-        bytesToSend_ = fileReader_->fileSize();
-        response_.mutable_header()->set_size(bytesToSend_);
-
-        if (bytesToSend_ > 0) {
-            if (request_.chunksize() == 0) {
-                request_.set_chunksize(DefaultChunkSize);
-            }
-
-            state_ = CallState::SendingFile;
-            responder_.Write(response_, tag_);
-        }
-        else {
-            state_ = CallState::CallComplete;
-            responder_.WriteAndFinish(response_, grpc::WriteOptions(), grpc::Status::OK, tag_);
-        }
-    }
-    else {
-        errorStatus_ = &RequestStatus::FileNameEmpty;
-    }
+    startFileDownloading();
 }
 
 
@@ -169,11 +148,63 @@ void DownloadRequestHandler::handleSendingFileState()
     bytesToSend_ -= chunkSize;
 
     if (finish) {
-        state_ = CallState::CallComplete;
-        responder_.WriteAndFinish(response_, grpc::WriteOptions(), grpc::Status::OK, tag_);
+        if (fileNames_.empty())
+        {
+            state_ = CallState::CallComplete;
+            responder_.WriteAndFinish(response_, grpc::WriteOptions(), grpc::Status::OK, tag_);
+        }
+        else
+        {
+            state_ = CallState::SendingNextFile;
+            responder_.Write(response_, tag_);
+        }
     }
     else {
         responder_.Write(response_, tag_);
     }
 }
 
+void DownloadRequestHandler::listFiles(const std::string& folder)
+{
+    fileNames_.clear();
+    for (auto& p : std::filesystem::directory_iterator(folder))
+    {
+        if (p.is_regular_file())
+            fileNames_.push_back(p.path().string());
+    }
+
+    std::sort(fileNames_.begin(), fileNames_.end());
+}
+
+void DownloadRequestHandler::startFileDownloading()
+{
+    const unsigned long DefaultChunkSize = 4 * 1024; // 4K
+
+    if (!fileNames_.empty()) {
+        const auto filename = fileNames_.front();
+        fileNames_.pop_front();
+
+        fileReader_ = fileManager_->readFile(filename);
+
+        response_.mutable_header()->set_name(std::filesystem::path(filename).filename().string());
+
+        bytesToSend_ = fileReader_->fileSize();
+        response_.mutable_header()->set_size(bytesToSend_);
+
+        if (bytesToSend_ > 0) {
+            if (request_.chunksize() == 0) {
+                request_.set_chunksize(DefaultChunkSize);
+            }
+
+            state_ = CallState::SendingFile;
+            responder_.Write(response_, tag_);
+        }
+        else {
+            state_ = CallState::CallComplete;
+            responder_.WriteAndFinish(response_, grpc::WriteOptions(), grpc::Status::OK, tag_);
+        }
+    }
+    else {
+        errorStatus_ = &RequestStatus::FileNameEmpty;
+    }
+}

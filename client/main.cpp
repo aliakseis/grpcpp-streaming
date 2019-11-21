@@ -14,7 +14,7 @@
 
 using namespace FileExchange;
 
-
+#if 0
 enum class RequestType
 {
     Download,
@@ -33,7 +33,6 @@ const std::string DownloadRequestArg = "download";
 const std::string UploadRequestArg   = "upload";
 
 
-std::unique_ptr<FileExchangeClient> client;
 
 
 bool parseArgs(int argc, char** argv, RequestData& requestData)
@@ -68,7 +67,9 @@ void printUsage(const std::string& appName)
     std::cout << "Usage: " << appName << " " << DownloadRequestArg
               << "|" << UploadRequestArg << " <file name>" << std::endl;
 }
+#endif
 
+std::unique_ptr<FileExchangeClient> client;
 
 void signalHandler(int signo)
 {
@@ -80,24 +81,28 @@ void signalHandler(int signo)
 
 void setSignalHandler()
 {
+#ifdef _WIN32
+    signal(SIGINT, signalHandler);
+#else
         struct sigaction sa;
         sa.sa_handler = signalHandler;
         sigemptyset(&sa.sa_mask);
         sa.sa_flags = 0;
         sigaction(SIGINT, &sa, NULL);
+#endif
 }
 
 
 
-void runRequest(FileExchangeClient* client, const RequestData& requestData)
+void runRequest(FileExchangeClient* client, const char* filename)//, const RequestData& requestData)
 {
     try {
-        if (requestData.type == RequestType::Download) {
-            client->download(requestData.filename);
-        }
-        else {
-            client->upload(requestData.filename);
-        }
+        //if (requestData.type == RequestType::Download) {
+            client->download(/*requestData.*/filename);
+        //}
+        //else {
+        //    client->upload(requestData.filename);
+        //}
     }
     catch (std::exception& e) {
         gpr_log(GPR_ERROR, "Caught exception: %s", e.what());
@@ -112,17 +117,23 @@ void runRequest(FileExchangeClient* client, const RequestData& requestData)
 
 int main(int argc, char** argv)
 {
+    if (argc != 2)
+    {
+        std::cerr << "Please provide file name.\n";
+        return EXIT_FAILURE;
+    }
+
     try {
         gpr_log_verbosity_init();
         gpr_set_log_verbosity(GPR_LOG_SEVERITY_ERROR);
 
-        RequestData requestData;
+        //RequestData requestData;
 
-        if (!parseArgs(argc, argv, requestData)) {
-            printUsage(argv[0]);
-            return EXIT_FAILURE;
-        }
-        else {
+        //if (!parseArgs(argc, argv, requestData)) {
+        //    printUsage(argv[0]);
+        //    return EXIT_FAILURE;
+        //}
+        //else {
             gpr_log(GPR_DEBUG, "Setting up signal handlers");
             setSignalHandler();
 
@@ -133,8 +144,8 @@ int main(int argc, char** argv)
             //gpr_log(GPR_DEBUG, "Starting worker threads");
 
             std::cout << "Press Ctrl-C to terminate..." << std::endl;
-            std::async(std::launch::async, runRequest, client.get(), std::cref(requestData));
-        }
+            std::async(std::launch::async, runRequest, client.get(), argv[1]);//std::cref(requestData));
+        //}
 
         return EXIT_SUCCESS;
     }

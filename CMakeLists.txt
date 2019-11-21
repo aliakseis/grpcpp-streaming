@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.4)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
 
 project(FileExchange CXX)
 
@@ -10,7 +11,11 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type (Debug, Release, RelWithDebInfo, MinSizeRel)" FORCE)
 endif()
 
-add_compile_options(-Wall -Werror)
+#add_compile_options(-Wall -Werror)
+
+if(MSVC)
+  add_definitions(-D_WIN32_WINNT=0x600)
+endif()
 
 
 find_package(Protobuf REQUIRED)
@@ -52,7 +57,6 @@ add_executable(FileExchangeServer
                common/FileWriter.cpp
                common/FileManager.cpp
                server/DownloadRequestHandler.cpp
-               server/UploadRequestHandler.cpp
                common/RequestStatus.cpp
                ${PROTO_SRCS}
                ${GRPC_SRCS})
@@ -65,7 +69,6 @@ add_executable(FileExchangeClient
                client/main.cpp
                client/Client.cpp
                client/DownloadRequestHandler.cpp
-               client/UploadRequestHandler.cpp
                common/FileReader.cpp
                common/FileWriter.cpp
                ${PROTO_SRCS}

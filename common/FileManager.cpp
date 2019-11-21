@@ -1,6 +1,8 @@
 #include "FileManager.h"
 #include "FileError.h"
 
+#include <grpc/support/log.h>
+
 
 using namespace FileExchange;
 
@@ -31,8 +33,10 @@ std::unique_ptr<FileReader> FileManager::readFile(const std::string& filename) c
 
         auto it = fileMutexes_.find(filename);
         if (it == fileMutexes_.end()) {
-            std::string message = "File is not managed by the server: " + filename;
-            throw FileNotManagedError(message);
+            //std::string message = "File is not managed by the server: " + filename;
+            //throw FileNotManagedError(message);
+            gpr_log(GPR_INFO, ("File is not managed by the server: " + filename).c_str());
+            return std::make_unique<FileReader>(filename);
         }
         else {
             mutexPtr = &it->second;

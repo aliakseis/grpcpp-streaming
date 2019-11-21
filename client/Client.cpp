@@ -1,6 +1,5 @@
 #include "Client.h"
 #include "DownloadRequestHandler.h"
-#include "UploadRequestHandler.h"
 
 #include <grpc/support/log.h>
 
@@ -18,14 +17,6 @@ FileExchangeClient::~FileExchangeClient()
     void* ignoredTag = nullptr;
     bool ok = false;
     while (cq_.Next(&ignoredTag, &ok));
-}
-
-
-void FileExchangeClient::upload(const std::string& filename)
-{
-    handler_ = std::make_unique<UploadRequestHandler>(&handler_, stub_.get(), &cq_, filename);
-
-    this->processMessages();
 }
 
 

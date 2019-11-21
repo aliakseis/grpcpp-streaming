@@ -100,7 +100,8 @@ void DownloadRequestHandler::handleExpectingHeaderState()
 {
     if (response_.has_header()) {
         //TODO check filename?
-        fileWriter_ = std::make_unique<FileWriter>(filename_);
+        const auto filename = response_.header().name();
+        fileWriter_ = std::make_unique<FileWriter>(filename);
 
         if (response_.header().size() > 0) {
             state_ = CallState::ReceivingFile;
@@ -134,7 +135,8 @@ void DownloadRequestHandler::handleReceivingFileState()
         rpc_->Read(&response_, tag_);
     }
     else {
-        throw std::runtime_error("File chunk expected");
+        //throw std::runtime_error("File chunk expected");
+        handleExpectingHeaderState();
     }
 }
 

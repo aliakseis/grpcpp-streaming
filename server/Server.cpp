@@ -1,6 +1,5 @@
 #include "Server.h"
 #include "DownloadRequestHandler.h"
-#include "UploadRequestHandler.h"
 
 #include <grpc/support/log.h>
 
@@ -24,7 +23,6 @@ void FileExchangeServer::start()
 
     gpr_log(GPR_INFO, "Server listening on %s", address_.c_str());
 
-    handlerManager_.addHandler<UploadRequestHandler>(&handlerManager_, &fileManager_, &service_, cq_.get());
     handlerManager_.addHandler<DownloadRequestHandler>(&handlerManager_, &fileManager_, &service_, cq_.get());
 
     gpr_log(GPR_DEBUG, "Starting worker threads");
