@@ -1,5 +1,7 @@
 #pragma once
 
+#include "IFileWriter.h"
+
 #include "FileLock.h"
 
 #include <fstream>
@@ -9,7 +11,7 @@
 
 namespace FileExchange {
 
-class FileWriter final
+class FileWriter final : public IFileWriter
 {
 public:
     FileWriter(const std::string& filename);
@@ -23,7 +25,7 @@ public:
     FileWriter(FileWriter&&)            = default;
     FileWriter& operator=(FileWriter&&) = default;
 
-    void write(const std::string& buffer);
+    void write(const std::string& buffer) override;
 
 private:
     void openFile();

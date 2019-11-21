@@ -13,7 +13,8 @@ public:
     DownloadRequestHandler(HandlerTag tag,
                            SimpleFileServer::Stub* stub,
                            grpc::CompletionQueue* cq,
-                           const std::string& filename);
+                           const std::string& filename,
+                           FileWriterFactory fileWriterFactory);
 
     ~DownloadRequestHandler() override = default;
 
@@ -56,11 +57,13 @@ protected:
 
     CallState                   state_;
 
-    std::unique_ptr<FileWriter> fileWriter_;
+    std::unique_ptr<IFileWriter> fileWriter_;
 
     std::string                 filename_;
 
     unsigned long long          bytesReceived_;
+
+    FileWriterFactory           fileWriterFactory_;
 };
 
 }

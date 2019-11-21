@@ -1,5 +1,7 @@
 #include "Client.h"
 
+#include "FileWriter.h"
+
 #include <grpcpp/grpcpp.h>
 #include <grpc/support/log.h>
 #include <signal.h>
@@ -98,7 +100,8 @@ void runRequest(FileExchangeClient* client, const char* filename)//, const Reque
 {
     try {
         //if (requestData.type == RequestType::Download) {
-            client->download(/*requestData.*/filename);
+        client->download(/*requestData.*/filename, 
+            [](const std::string& filename, unsigned long long) { return std::unique_ptr<IFileWriter>( new FileWriter(filename) ); });
         //}
         //else {
         //    client->upload(requestData.filename);

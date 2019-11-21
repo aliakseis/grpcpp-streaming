@@ -11,13 +11,15 @@ using namespace FileExchange;
 DownloadRequestHandler::DownloadRequestHandler(HandlerTag tag,
                                                SimpleFileServer::Stub* stub,
                                                grpc::CompletionQueue* cq,
-                                               const std::string& filename)
+                                               const std::string& filename,
+                                               FileWriterFactory fileWriterFactory)
     : tag_(tag)
     , stub_(stub)
     , cq_(cq)
     , state_(CallState::NewCall)
     , filename_(filename)
     , bytesReceived_(0)
+    , fileWriterFactory_(fileWriterFactory)
 {
     this->onNext(true);
 }
@@ -101,9 +103,10 @@ void DownloadRequestHandler::handleExpectingHeaderState()
     if (response_.has_header()) {
         //TODO check filename?
         const auto filename = response_.header().name();
-        fileWriter_ = std::make_unique<FileWriter>(filename);
+        const auto size = response_.header().size();
+        fileWriter_ = fileWriterFactory_(filename, size);//std::make_unique<FileWriter>(filename);
 
-        if (response_.header().size() > 0) {
+        if (size > 0) {
             state_ = CallState::ReceivingFile;
             response_.Clear();
             rpc_->Read(&response_, tag_);

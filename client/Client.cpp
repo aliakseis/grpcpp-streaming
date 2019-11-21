@@ -20,9 +20,9 @@ FileExchangeClient::~FileExchangeClient()
 }
 
 
-void FileExchangeClient::download(const std::string& filename)
+void FileExchangeClient::download(const std::string& filename, FileWriterFactory fileWriterFactory)
 {
-    handler_ = std::make_unique<DownloadRequestHandler>(&handler_, stub_.get(), &cq_, filename);
+    handler_ = std::make_unique<DownloadRequestHandler>(&handler_, stub_.get(), &cq_, filename, fileWriterFactory);
 
     this->processMessages();
 }

@@ -1,4 +1,6 @@
 #include "HandlerInterface.h"
+#include "IFileWriter.h"
+
 #include "FileExchange.grpc.pb.h"
 
 #include <grpcpp/grpcpp.h>
@@ -25,7 +27,7 @@ public:
     FileExchangeClient(FileExchangeClient&&)                 = delete;
     FileExchangeClient& operator=(FileExchangeClient&&)      = delete;
 
-    void download(const std::string& filename);
+    void download(const std::string& filename, FileWriterFactory fileWriterFactory);
 
     void cancel();
 
