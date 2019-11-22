@@ -43,17 +43,11 @@ bool DownloadRequestHandler::onNext(bool ok)
             return false;
         }
         else if (ok) {
-            if (state_ == CallState::NewCall) {
-                handleNewCallState();
-            }
-            else if (state_ == CallState::ExpectingRequest) {
-                handleExpectingRequestState();
-            }
-            else if (state_ == CallState::SendingFile) {
-                handleSendingFileState();
-            }
-            else if (state_ == CallState::SendingNextFile) {
-                startFileDownloading();
+            switch (state_) {
+            case CallState::NewCall: handleNewCallState(); break;
+            case CallState::ExpectingRequest: handleExpectingRequestState(); break;
+            case CallState::SendingFile: handleSendingFileState(); break;
+            case CallState::SendingNextFile: startFileDownloading(); break;
             }
         }
         else {

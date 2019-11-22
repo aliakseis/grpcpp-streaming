@@ -29,21 +29,12 @@ bool DownloadRequestHandler::onNext(bool ok)
 {
     try {
         if (ok) {
-            if (state_ == CallState::NewCall) {
-                this->handleNewCallState();
-            }
-            else if (state_ == CallState::SendingRequest) {
-                this->handleSendingRequestState();
-            }
-            else if (state_ == CallState::ExpectingHeader) {
-                this->handleExpectingHeaderState();
-            }
-            else if (state_ == CallState::ReceivingFile) {
-                this->handleReceivingFileState();
-            }
-            else if (state_ == CallState::CallComplete) {
-                this->handleCallCompleteState();
-                return false; //TODO comment
+            switch (state_) {
+            case CallState::NewCall: handleNewCallState(); break;
+            case CallState::SendingRequest: handleSendingRequestState(); break;
+            case CallState::ExpectingHeader: handleExpectingHeaderState(); break;
+            case CallState::ReceivingFile: handleReceivingFileState(); break;
+            case CallState::CallComplete: handleCallCompleteState(); return false; //TODO comment
             }
         }
         else {
